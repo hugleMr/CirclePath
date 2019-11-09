@@ -1,2 +1,2 @@
-# hello-world
-Hello world new project template.
+# Circle Path
+Cocos Creator v2.2.0
