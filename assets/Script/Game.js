@@ -16,19 +16,12 @@ cc.Class({
             default: null,
             type: cc.Label
         },
-        arm: {
-            default: null,
-            type: cc.Node
-        },
-        ball0: {
-            default: null,
-            type: cc.Node
-        },
-        ball1: {
-            default: null,
-            type: cc.Node
-        },
         gameGroup: {
+            default: null,
+            type: cc.Node
+        },
+        balls: [cc.Node],
+        arm: {
             default: null,
             type: cc.Node
         },
@@ -43,7 +36,7 @@ cc.Class({
     },
 
     // use this for initialization
-    onLoad: function () {
+    onLoad () {
         // 本地存储数据
         this.localData = {
             level: 1,
@@ -52,14 +45,10 @@ cc.Class({
         this.gameWidth = this.node.width;
         this.gameHeight = this.node.height;
         this.solidBallPosX = 0;
-        this.solidBallPosY = -this.gameHeight / 4;
+        this.solidBallPosY = -this.gameHeight / 5;
 
         this.targetArray = [];
         this.targetPool = new cc.NodePool();
-
-        this.balls = [];
-        this.balls[0] = this.ball0;
-        this.balls[1] = this.ball1;
 
         this.startGame();
 
@@ -83,26 +72,26 @@ cc.Class({
 
         let colorIndex = Math.floor(Math.random() * bgColors.length);
         console.log('colorIndex = ' + colorIndex);
-        this.tintColor = bgColors[colorIndex];
-        console.log('backgroundColor = ' + this.tintColor);
-        this.background.color = cc.Color.BLACK.fromHEX(this.tintColor);
+        this.backgroundColor = bgColors[colorIndex];
+        console.log('backgroundColor = ' + this.backgroundColor);
+        this.background.color = cc.Color.BLACK.fromHEX(this.backgroundColor);
 
         do {
-            this.tintColor2 = bgColors[Math.floor(Math.random() * bgColors.length)];
-        } while (this.tintColor == this.tintColor2)
-        this.label.node.color = cc.Color.BLACK.fromHEX(this.tintColor2);
+            this.tintColor = bgColors[Math.floor(Math.random() * bgColors.length)];
+        } while (this.backgroundColor == this.tintColor)
+        this.label.node.color = cc.Color.BLACK.fromHEX(this.tintColor);
 
         this.gameGroup.position = cc.v2(this.solidBallPosX, this.solidBallPosY);
         this.arm.active = true;
-        this.arm.color = cc.Color.BLACK.fromHEX(this.tintColor2);
+        this.arm.color = cc.Color.BLACK.fromHEX(this.tintColor);
         this.arm.position = cc.v2(100, 0);
         this.arm.angle = 0;
         this.balls[0].stopAllActions();
-        this.balls[0].color = cc.Color.BLACK.fromHEX(this.tintColor2);
+        this.balls[0].color = cc.Color.BLACK.fromHEX(this.tintColor);
         this.balls[0].position = cc.v2(100, 0);
         this.balls[0].opacity = 255;
         this.balls[1].stopAllActions();
-        this.balls[1].color = cc.Color.BLACK.fromHEX(this.tintColor2);
+        this.balls[1].color = cc.Color.BLACK.fromHEX(this.tintColor);
         this.balls[1].position = cc.v2(220, 0);
         this.balls[1].opacity = 255;
         this.rotationAngle = 0;
@@ -135,18 +124,14 @@ cc.Class({
     },
 
     // called every frame
-    update: function (dt) {
+    update (dt) {
         // mag() 返回向量的长度
         var distanceFromTarget = this.balls[this.rotatingBall].position.sub(this.targetArray[1].position).mag();
-        if(distanceFromTarget > 90 && this.destroy && this.steps > visibleTargets){
+        if (distanceFromTarget > 90 && this.destroy && this.steps > visibleTargets) {
              this.gameOver();
         }
-        if(distanceFromTarget < 40 && !this.destroy){
+        if (distanceFromTarget < 40 && !this.destroy) {
              this.destroy = true;
-        }
-        // 开挂脚本
-        if(distanceFromTarget < 20) {
-            this.changeBall();
         }
         this.rotationAngle = (this.rotationAngle + this.saveRotationSpeed * (this.rotatingDirection * 2 - 1)) % 360;
         this.arm.angle = this.rotationAngle + 90;
@@ -157,16 +142,15 @@ cc.Class({
         let canvasPosition = this.node.convertToNodeSpaceAR(worldPosition);
         var distanceX = canvasPosition.x - this.solidBallPosX;
         var distanceY = canvasPosition.y - this.solidBallPosY;
-        // console.log('distanceX = ' + worldPosition + ', distanceY = ' + canvasPosition);
         this.gameGroup.x = cc.misc.lerp(this.gameGroup.x, this.gameGroup.x - distanceX, 0.05);
         this.gameGroup.y = cc.misc.lerp(this.gameGroup.y, this.gameGroup.y - distanceY, 0.05); 
     },
     
-    changeBall: function() {
+    changeBall () {
         this.destroy = false;
         // mag() 返回向量的长度
         var distanceFromTarget = this.balls[this.rotatingBall].position.sub(this.targetArray[1].position).mag();
-        if(distanceFromTarget < 20) {
+        if (distanceFromTarget < 20) {
             this.rotatingDirection = Math.round(Math.random() * 1);
             let doneTarget = this.targetArray[0];
             cc.tween(doneTarget)
@@ -174,7 +158,6 @@ cc.Class({
                 // 当前面的动作都执行完毕后才会调用这个回调函数
                 .call(() => {
                     cc.log('Target Removed')
-                    // doneTarget.destroy();
                     this.removeTargetPrefab(doneTarget);
                 }).start();
             this.targetArray.shift();
@@ -183,7 +166,7 @@ cc.Class({
             this.rotationAngle = this.balls[1 - this.rotatingBall].position.angle(this.balls[this.rotatingBall].position, true) - 90;
             this.arm.angle = this.rotationAngle + 90; 
             for(var i = 0; i < this.targetArray.length; i++){
-                this.targetArray[i].opacity += 255 / 7;  
+                this.targetArray[i].opacity += 255 / visibleTargets;  
             }
             this.addTarget();
         } else {
@@ -191,7 +174,7 @@ cc.Class({
         }   
     },
 
-    addTarget: function() {
+    addTarget () {
         this.steps++;
         let startX = this.targetArray[this.targetArray.length - 1].x;
         let startY = this.targetArray[this.targetArray.length - 1].y;          
@@ -200,14 +183,14 @@ cc.Class({
         // 角度转为弧度：randomAngle / 180 * Math.PI
         target.x = startX + ballDistance * Math.cos(randomAngle / 180 * Math.PI);
         target.y = startY + ballDistance * Math.sin(randomAngle / 180 * Math.PI);
-        target.opacity = 255 * (1 - this.targetArray.length * (1 / 7));
+        target.opacity = 255 * (1 - this.targetArray.length * (1 / visibleTargets));
         target.parent = this.targetGroup;
         var targetComp = target.getComponent("Target");
         targetComp.setTargetNum(this.steps);
         this.targetArray.push(target);      
    },
 
-   gameOver: function() {
+   gameOver () {
         cc.sys.localStorage.setItem('circlepath', JSON.stringify({
             bestScore: Math.max(this.bestScore, this.steps - visibleTargets)
         }));
@@ -223,7 +206,7 @@ cc.Class({
             }).start();
     },
 
-    getTargetPrefab() {
+    getTargetPrefab () {
         let targetNode = this.targetPool.get();
         if (targetNode == null) {
             targetNode = cc.instantiate(this.targetPrefab);
@@ -231,7 +214,7 @@ cc.Class({
         return targetNode;
     },
 
-    removeTargetPrefab(targetNode) {
+    removeTargetPrefab (targetNode) {
         this.targetPool.put(targetNode); 
     }
 });
