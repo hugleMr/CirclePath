@@ -52,14 +52,13 @@ cc.Class({
 
         this.startGame();
 
-        // 触摸事件
-        this.node.on(cc.Node.EventType.TOUCH_END, function (event) {
+        this.node.on(cc.Node.EventType.TOUCH_START, function (event) {
             this.changeBall();
         }, this);
     },
 
     startGame () {
-        // 对于复杂的对象数据，通过将对象序列化为 JSON 后保存
+        this.label.string = 0;
         // cc.sys.localStorage.setItem('circlepath', JSON.stringify(localData));
         this.localStorage = JSON.parse(cc.sys.localStorage.getItem('circlepath'));
         console.log('localStorage = ' + this.localStorage);
@@ -68,30 +67,30 @@ cc.Class({
         } else {
             this.bestScore = this.localStorage.bestScore;
         }
-        this.label.string = 'Best Score : ' + this.bestScore;
+        // this.label.string = this.bestScore;
 
         let colorIndex = Math.floor(Math.random() * bgColors.length);
         console.log('colorIndex = ' + colorIndex);
-        this.backgroundColor = bgColors[colorIndex];
+        this.backgroundColor = "#000000";//bgColors[colorIndex];
         console.log('backgroundColor = ' + this.backgroundColor);
-        this.background.color = cc.Color.BLACK.fromHEX(this.backgroundColor);
+        //this.background.color = cc.Color.BLACK.fromHEX(this.backgroundColor);
 
         do {
             this.tintColor = bgColors[Math.floor(Math.random() * bgColors.length)];
         } while (this.backgroundColor == this.tintColor)
-        this.label.node.color = cc.Color.BLACK.fromHEX(this.tintColor);
+        // this.label.node.color = cc.Color.BLACK.fromHEX(this.tintColor);
 
         this.gameGroup.position = cc.v2(this.solidBallPosX, this.solidBallPosY);
         this.arm.active = true;
-        this.arm.color = cc.Color.BLACK.fromHEX(this.tintColor);
+        // this.arm.color = cc.Color.BLACK.fromHEX(this.tintColor);
         this.arm.position = cc.v2(100, 0);
         this.arm.angle = 0;
         this.balls[0].stopAllActions();
-        this.balls[0].color = cc.Color.BLACK.fromHEX(this.tintColor);
+        // this.balls[0].color = cc.Color.BLACK.fromHEX(this.tintColor);
         this.balls[0].position = cc.v2(100, 0);
         this.balls[0].opacity = 255;
         this.balls[1].stopAllActions();
-        this.balls[1].color = cc.Color.BLACK.fromHEX(this.tintColor);
+        // this.balls[1].color = cc.Color.BLACK.fromHEX(this.tintColor);
         this.balls[1].position = cc.v2(220, 0);
         this.balls[1].opacity = 255;
         this.rotationAngle = 0;
@@ -127,7 +126,7 @@ cc.Class({
     update (dt) {
         // mag() 返回向量的长度
         var distanceFromTarget = this.balls[this.rotatingBall].position.sub(this.targetArray[1].position).mag();
-        if (distanceFromTarget > 90 && this.destroy && this.steps > visibleTargets) {
+        if (distanceFromTarget > 360 && this.destroy && this.steps > visibleTargets) {
              this.gameOver();
         }
         if (distanceFromTarget < 40 && !this.destroy) {
@@ -169,6 +168,8 @@ cc.Class({
                 this.targetArray[i].opacity += 255 / visibleTargets;  
             }
             this.addTarget();
+
+            this.label.string = this.steps - visibleTargets;
         } else {
             this.gameOver();
         }   
